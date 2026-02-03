@@ -72,3 +72,30 @@ FROM users
 LEFT JOIN events ON users.user_id = events.user_id
 GROUP BY cohort_month
 ORDER BY cohort_month;
+
+-- 1.5 Віконні функції
+
+WITH weekly_stats AS (
+    SELECT 
+        strftime('%Y-%W', order_date) AS week_number,
+        
+        ROUND(AVG(amount), 2) AS current_aov
+    FROM orders
+    WHERE status = 'completed'
+    GROUP BY week_number
+)
+
+SELECT 
+    week_number, 
+    current_aov,
+
+    LAG(current_aov) OVER (ORDER BY week_number) AS prev_week_aov,
+
+    ROUND(
+        (current_aov - LAG(current_aov) OVER (ORDER BY week_number)) * 100.0 
+        / 
+        LAG(current_aov) OVER (ORDER BY week_number), 
+    2) AS growth_percent
+    
+FROM weekly_stats
+ORDER BY week_number;
