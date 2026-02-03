@@ -45,3 +45,30 @@ HAVING
 	total_transactions > 3
 	AND
     successful_transactions = 0;
+
+-- 1.4 Когортний аналіз (Retention)
+
+SELECT 
+    SUBSTRING(users.registration_date, 1, 7) AS cohort_month,
+
+    COUNT(DISTINCT users.user_id) AS cohort_size,
+
+    ROUND(
+        COUNT(DISTINCT CASE WHEN CAST(JULIANDAY(events.event_date) - JULIANDAY(users.registration_date) AS INTEGER) = 1 THEN users.user_id END) * 100.0 
+        / COUNT(DISTINCT users.user_id), 
+    2) AS retention_day_1,
+
+    ROUND(
+        COUNT(DISTINCT CASE WHEN CAST(JULIANDAY(events.event_date) - JULIANDAY(users.registration_date) AS INTEGER) = 7 THEN users.user_id END) * 100.0 
+        / COUNT(DISTINCT users.user_id), 
+    2) AS retention_day_7,
+
+    ROUND(
+        COUNT(DISTINCT CASE WHEN CAST(JULIANDAY(events.event_date) - JULIANDAY(users.registration_date) AS INTEGER) = 30 THEN users.user_id END) * 100.0 
+        / COUNT(DISTINCT users.user_id), 
+    2) AS retention_day_30
+
+FROM users
+LEFT JOIN events ON users.user_id = events.user_id
+GROUP BY cohort_month
+ORDER BY cohort_month;
