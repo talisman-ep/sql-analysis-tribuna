@@ -32,3 +32,16 @@ FROM users
 LEFT JOIN orders ON users.user_id = orders.user_id
 GROUP BY 1
 ORDER BY 1;
+
+-- 1.3 Фільтрація зі складною умовою
+
+SELECT
+	user_id,
+    COUNT(order_id) AS total_transactions,
+    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS successful_transactions
+FROM orders
+GROUP BY user_id
+HAVING 
+	total_transactions > 3
+	AND
+    successful_transactions = 0;
